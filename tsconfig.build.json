@@ -1,0 +1,9 @@
+{
+  "extends": "@paleite/tsconfig-node18",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src"],
+  "exclude": ["**/*.test.ts", "dist"]
+}

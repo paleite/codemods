@@ -1,0 +1,9 @@
+{
+  "extends": "@paleite/tsconfig-node18",
+  "compilerOptions": {
+    "allowJs": true,
+    "composite": true,
+    "noEmit": true
+  },
+  "include": [".*.js", "*.js"]
+}
