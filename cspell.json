@@ -1,5 +1,11 @@
 {
   "version": "0.2",
-  "words": ["Eriksson"],
-  "ignoreWords": ["paleite", "pinst"]
+  "words": [
+    "Eriksson",
+    "jscodeshift"
+  ],
+  "ignoreWords": [
+    "paleite",
+    "pinst"
+  ]
 }
