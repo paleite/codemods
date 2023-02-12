@@ -28,6 +28,7 @@
     "publish-stable": "np",
     "start": "node dist",
     "test": "jest --coverage",
+    "test:ci": "jest --ci --coverage | tee ./coverage.txt",
     "typecheck": "tsc --project tsconfig.json"
   },
   "devDependencies": {
