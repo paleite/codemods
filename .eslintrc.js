@@ -5,4 +5,15 @@ module.exports = {
     project: ["./tsconfig.json", "./tsconfig.eslint.json"],
     tsconfigRootDir: __dirname,
   },
+  rules: {
+    "import/no-unused-modules": [
+      "error",
+      {
+        unusedExports: true,
+        missingExports: false,
+        src: ["src/**/*.ts"],
+        ignoreExports: ["src/*.ts"],
+      },
+    ],
+  },
 };

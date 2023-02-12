@@ -1,9 +1,10 @@
 {
-  "extends": "@paleite/tsconfig-node18",
+  // "extends": "@paleite/tsconfig-node18",
+  "extends": "./node_modules/@paleite/tsconfig-node18/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src"],
+  "include": ["src", "jscodeshift-env.d.ts"],
   "exclude": ["**/*.test.ts", "src/utils/test-utils.ts", "dist"]
 }

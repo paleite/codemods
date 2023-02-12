@@ -1,6 +1,5 @@
-// import * as prettier from "prettier";
-import { default as enumToAsConst } from "./enum-to-as-const";
 import { transform } from "../lib/test-utils";
+import { default as enumToAsConst } from "./enum-to-as-const";
 
 describe("enum-to-as-const", () => {
   it("transforms enums to as const when all values are literals", () => {
@@ -8,6 +7,18 @@ describe("enum-to-as-const", () => {
       .toMatchInlineSnapshot(`
       "const Foo = {
         Bar: "bar",
+        Baz: "baz"
+      } as const;"
+    `);
+
+    expect(
+      transform(
+        enumToAsConst,
+        `enum Foo { "Foo-Bar" = "foo-bar", Baz = "baz" };`
+      )
+    ).toMatchInlineSnapshot(`
+      "const Foo = {
+        "Foo-Bar": "foo-bar",
         Baz: "baz"
       } as const;"
     `);
