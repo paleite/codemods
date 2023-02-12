@@ -6,4 +6,7 @@ const transform: (module: Transform, source: string) => string = (
   source
 ) => applyTransform(module, {}, { source }, { parser: "ts" });
 
+type TransformFunction = typeof transform;
+
+export type { TransformFunction };
 export { transform };
