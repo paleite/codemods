@@ -23,7 +23,7 @@ const createObjectPropertiesGetter = (j: JSCodeshift) => {
     );
 
     if (!isArrayDefined(literalObjectProperties)) {
-      return;
+      return undefined;
     }
 
     return literalObjectProperties;

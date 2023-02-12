@@ -7,7 +7,7 @@ function assertNoUndefinedInArray<T>(
     return;
   }
 
-  throw new Error("Array contains undefined values");
+  throw Error("Array contains undefined values");
 }
 
 const isArrayDefined = <T>(array: (T | undefined)[]): array is T[] => {
