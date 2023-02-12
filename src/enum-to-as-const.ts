@@ -1,11 +1,12 @@
 import type {
-  JSCodeshift,
   ASTPath,
+  JSCodeshift,
   TSEnumDeclaration,
   TSEnumMember,
   Transform,
 } from "jscodeshift";
 import { isArrayDefined } from "./utils/assertion-functions";
+import { createVariableDeclarationWithAsConst } from "./utils/create";
 
 const createLiteralObjectPropertyGetter =
   (j: JSCodeshift) =>
@@ -29,21 +30,6 @@ const createObjectPropertiesGetter = (j: JSCodeshift) => {
     return literalObjectProperties;
   };
 };
-
-const createVariableDeclarationWithAsConst = (
-  j: JSCodeshift,
-  enumName: Parameters<typeof j.identifier>[0],
-  objectProperties: Parameters<typeof j.objectExpression>[0]
-) =>
-  j.variableDeclaration("const", [
-    j.variableDeclarator(
-      j.identifier(enumName),
-      j.tsAsExpression(
-        j.objectExpression(objectProperties),
-        j.tsTypeReference(j.identifier("const"))
-      )
-    ),
-  ]);
 
 const transform: Transform = (file, { jscodeshift: j }) => {
   const getObjectProperties = createObjectPropertiesGetter(j);
