@@ -1,4 +1,5 @@
+/cspell.json
 coverage/
 dist/
 generated/
-/cspell.json
+pnpm-lock.yaml

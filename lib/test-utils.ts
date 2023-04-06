@@ -1,12 +1,24 @@
-import type { Transform } from "jscodeshift";
+import type { Options, Transform } from "jscodeshift";
 import { applyTransform } from "jscodeshift/dist/testUtils";
 
-const transform: (module: Transform, source: string) => string = (
-  module,
-  source
-) => applyTransform(module, {}, { source }, { parser: "ts" });
+type TransformerFactory = (
+  module: Transform,
+  options?: Options
+) => (source: string) => { input: string; output: string };
 
-type TransformFunction = typeof transform;
+const createTransform: TransformerFactory =
+  (module, options = {}) =>
+  (source) => {
+    jest.resetModules();
 
-export type { TransformFunction };
-export { transform };
+    const output = applyTransform(
+      module,
+      options,
+      { source },
+      { parser: "ts" }
+    );
+
+    return { input: source, output };
+  };
+
+export { createTransform };

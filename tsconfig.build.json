@@ -3,7 +3,8 @@
   "extends": "./node_modules/@paleite/tsconfig-node18/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "ignoreDeprecations": "5.0"
   },
   "include": ["src", "jscodeshift-env.d.ts"],
   "exclude": ["**/*.test.ts", "src/utils/test-utils.ts", "dist"]
