@@ -19,7 +19,7 @@
     "build": "tsup",
     "clean": "tsc --build tsconfig.build.json --clean",
     "format": "prettier --write .",
-    "postinstall": "yarn build",
+    "postinstall": "pnpm run build",
     "lint": "eslint --cache --ext .js,.ts,.tsx",
     "prepare": "husky install",
     "prepublishOnly": "pinst --disable",
