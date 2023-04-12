@@ -10,9 +10,9 @@ const transform: Transform = (fileInfo, api) => {
   const prefixPatterns = ["T", "I"];
 
   function assertIdentifier(
-    id: TSInterfaceDeclaration["id"]
+    id?: TSInterfaceDeclaration["id"] | null
   ): asserts id is Identifier {
-    j.Identifier.assert(id);
+    j.Identifier.assert(id ?? undefined);
   }
 
   const removePrefix = (name: string) => {
@@ -57,6 +57,46 @@ const transform: Transform = (fileInfo, api) => {
 
       typesToRename.set(path.node.id.name, newName);
       path.node.id.name = newName;
+    });
+
+  root.find(j.TSExpressionWithTypeArguments).forEach((path) => {
+    assertIdentifier(path.node.expression);
+
+    const newName = removePrefix(path.node.expression.name);
+    if (newName === path.node.expression.name) {
+      return;
+    }
+
+    typesToRename.set(path.node.expression.name, newName);
+    path.node.expression.name = newName;
+  });
+
+  root
+    .find(j.ExportSpecifier, { local: { type: "Identifier" } })
+    .forEach((path) => {
+      assertIdentifier(path.node.local);
+
+      const newName = removePrefix(path.node.local.name);
+      if (newName === path.node.local.name) {
+        return;
+      }
+
+      typesToRename.set(path.node.local.name, newName);
+      path.node.local.name = newName;
+    });
+
+  root
+    .find(j.ExportSpecifier, { exported: { type: "Identifier" } })
+    .forEach((path) => {
+      assertIdentifier(path.node.exported);
+
+      const newName = removePrefix(path.node.exported.name);
+      if (newName === path.node.exported.name) {
+        return;
+      }
+
+      typesToRename.set(path.node.exported.name, newName);
+      path.node.exported.name = newName;
     });
 
   // Rename the collected types in type references

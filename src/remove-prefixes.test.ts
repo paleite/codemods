@@ -34,4 +34,32 @@ describe("removePrefixes", () => {
           export type UseQueryOptions<TQueryFnData = unknown> = Omit<TUnreferencedGeneric<TReferencedGeneric<TQueryFnData>>, "queryKey">;"
     `);
   });
+
+  it("removes prefixes from interfaces", () => {
+    const { output } = transform(`export type IRequestError = {};
+    export interface IResponseError {};
+    export class SomeClass extends Error implements IRequestError, IResponseError {}`);
+    expect(output).toMatchInlineSnapshot(`
+      "export type RequestError = {};
+          export interface ResponseError {};
+          export class SomeClass extends Error implements RequestError, ResponseError {}"
+    `);
+  });
+
+  it("removes prefixes from exports", () => {
+    const { output } = transform(`type IRequestError = {};
+    export interface IResponseError {};
+    export class SomeClass extends Error implements IRequestError, IResponseError {}
+    export class SomeClass2 implements IRequestError, IResponseError {}
+
+export { IRequestError as TRequestErrorConstructor }`);
+    expect(output).toMatchInlineSnapshot(`
+      "type RequestError = {};
+          export interface ResponseError {};
+          export class SomeClass extends Error implements RequestError, ResponseError {}
+          export class SomeClass2 implements RequestError, ResponseError {}
+
+      export { RequestError as RequestErrorConstructor }"
+    `);
+  });
 });
