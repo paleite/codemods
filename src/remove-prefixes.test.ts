@@ -20,7 +20,7 @@ describe("removePrefixes", () => {
     export type TUseQueryOptions<TQueryFnData = unknown> = Omit<TUnreferencedGeneric<TReferencedGeneric<TQueryFnData>>, "queryKey">;`);
 
     expect(output).toMatchInlineSnapshot(`
-      "import { IReferencedGeneric as TReferencedGeneric } from "some-module";
+      "import { ReferencedGeneric as ReferencedGeneric } from "some-module";
           export type TabProps = ExtractProps<typeof TwTab>;
           export type IsNotPrefixed = ExtractProps<typeof TwTab>;
           export type TsPrefixed = ExtractProps<typeof TwTab>;
@@ -31,7 +31,7 @@ describe("removePrefixes", () => {
           export type QRCodeResponse = QRCodeResponse;
           const TRequestErrorElement: RequestErrorElement = { TRequestErrorElement: "test", message: { code: "test" } };
           export const IMessage: Message = { code: "test" } as Message;
-          export type UseQueryOptions<TQueryFnData = unknown> = Omit<TUnreferencedGeneric<TReferencedGeneric<TQueryFnData>>, "queryKey">;"
+          export type UseQueryOptions<TQueryFnData = unknown> = Omit<TUnreferencedGeneric<ReferencedGeneric<TQueryFnData>>, "queryKey">;"
     `);
   });
 
@@ -60,6 +60,22 @@ export { IRequestError as TRequestErrorConstructor }`);
           export class SomeClass2 implements RequestError, ResponseError {}
 
       export { RequestError as RequestErrorConstructor }"
+    `);
+  });
+
+  it("removes prefixes from imports", () => {
+    const { output } =
+      transform(`import type { TUseQueryOptions } from "../types";
+    import type { IUseQueryOptions as TUseQueryOptions2 } from "../types";
+
+    import { TUseQueryOptions3 } from "../types";
+    import { IUseQueryOptions as TUseQueryOptions4 } from "../types";`);
+    expect(output).toMatchInlineSnapshot(`
+      "import type { UseQueryOptions } from "../types";
+          import type { UseQueryOptions as UseQueryOptions2 } from "../types";
+
+          import { UseQueryOptions3 } from "../types";
+          import { UseQueryOptions as UseQueryOptions4 } from "../types";"
     `);
   });
 });

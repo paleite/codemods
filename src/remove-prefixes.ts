@@ -99,6 +99,34 @@ const transform: Transform = (fileInfo, api) => {
       path.node.exported.name = newName;
     });
 
+  root
+    .find(j.ImportSpecifier, { local: { type: "Identifier" } })
+    .forEach((path) => {
+      assertIdentifier(path.node.local);
+
+      const newName = removePrefix(path.node.local.name);
+      if (newName === path.node.local.name) {
+        return;
+      }
+
+      typesToRename.set(path.node.local.name, newName);
+      path.node.local.name = newName;
+    });
+
+  root
+    .find(j.ImportSpecifier, { imported: { type: "Identifier" } })
+    .forEach((path) => {
+      assertIdentifier(path.node.imported);
+
+      const newName = removePrefix(path.node.imported.name);
+      if (newName === path.node.imported.name) {
+        return;
+      }
+
+      typesToRename.set(path.node.imported.name, newName);
+      path.node.imported.name = newName;
+    });
+
   // Rename the collected types in type references
   root
     .find(j.TSTypeReference, { typeName: { type: "Identifier" } })
