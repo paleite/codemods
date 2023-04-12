@@ -4,7 +4,7 @@ import { default as removePrefixes } from "./remove-prefixes";
 const transform = createTransform(removePrefixes);
 
 describe("removePrefixes", () => {
-  it("transforms enums to as const when all values are literals", () => {
+  it("removes prefixes from types", () => {
     const { output } =
       transform(`import { IReferencedGeneric as TReferencedGeneric } from "some-module";
     export type TabProps = ExtractProps<typeof TwTab>;
