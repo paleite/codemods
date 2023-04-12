@@ -4,7 +4,7 @@ import { default as removePrefixes } from "./remove-prefixes";
 const transform = createTransform(removePrefixes);
 
 describe("removePrefixes", () => {
-  it("transforms enums to as const when all values are literals", () => {
+  it("removes prefixes from types", () => {
     const { output } =
       transform(`import { IReferencedGeneric as TReferencedGeneric } from "some-module";
     export type TabProps = ExtractProps<typeof TwTab>;
@@ -13,6 +13,7 @@ describe("removePrefixes", () => {
     type TRequestErrorElement = { field?: string; message: IMessage };
     type IMessage = { code: Ti18nKey; text?: string };
     interface IChainable { mount: typeof mount; }
+    interface Interwebs { mount: typeof mount; }
     export type TQRCodeResponse = QRCodeResponse;
     const TRequestErrorElement: TRequestErrorElement = { TRequestErrorElement: "test", message: { code: "test" } };
     export const IMessage: IMessage = { code: "test" } as IMessage;
@@ -26,6 +27,7 @@ describe("removePrefixes", () => {
           type RequestErrorElement = { field?: string; message: Message };
           type Message = { code: Ti18nKey; text?: string };
           interface Chainable { mount: typeof mount; }
+          interface Interwebs { mount: typeof mount; }
           export type QRCodeResponse = QRCodeResponse;
           const TRequestErrorElement: RequestErrorElement = { TRequestErrorElement: "test", message: { code: "test" } };
           export const IMessage: Message = { code: "test" } as Message;
