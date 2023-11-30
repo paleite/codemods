@@ -24,9 +24,12 @@ const createReplaceWithVariableDeclarationWithAsConst = (j: JSCodeshift) => {
   };
 
   const replaceWithVariableDeclarationWithAsConst = function (
-    this: Collection<TSEnumDeclaration>
+    this: Collection<TSEnumDeclaration>,
   ): Collection<TSEnumDeclaration> {
     return this.forEach((path) => {
+      if (typeof path.node.id.name !== "string") {
+        throw TypeError("Expected enum name to be a string");
+      }
       const enumName = path.node.id.name;
       const literalObjectProperties = getObjectProperties(path);
 
@@ -38,7 +41,7 @@ const createReplaceWithVariableDeclarationWithAsConst = (j: JSCodeshift) => {
         createVariableDeclarationWithAsConst(
           j,
           enumName,
-          literalObjectProperties
+          literalObjectProperties,
         );
 
       j(path).replaceWith(variableDeclarationWithAsConst);
@@ -62,7 +65,7 @@ const registerMethod = (j: JSCodeshift) => {
       replaceWithVariableDeclarationWithAsConst:
         createReplaceWithVariableDeclarationWithAsConst(j),
     },
-    j.TSEnumDeclaration
+    j.TSEnumDeclaration,
   );
 };
 

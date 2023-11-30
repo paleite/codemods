@@ -10,7 +10,7 @@ const transform: Transform = (fileInfo, api) => {
   const prefixPatterns = ["T", "I"];
 
   function assertIdentifier(
-    id?: TSInterfaceDeclaration["id"] | null
+    id?: TSInterfaceDeclaration["id"] | null,
   ): asserts id is Identifier {
     j.Identifier.assert(id ?? undefined);
   }
@@ -36,6 +36,9 @@ const transform: Transform = (fileInfo, api) => {
   const typesToRename: Map<string, string> = new Map();
 
   root.find(j.TSTypeAliasDeclaration).forEach((path) => {
+    if (typeof path.node.id.name !== "string") {
+      throw TypeError("Expected type alias name to be a string");
+    }
     const newName = removePrefix(path.node.id.name);
     if (newName === path.node.id.name) {
       return;
