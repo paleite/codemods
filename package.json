@@ -65,6 +65,9 @@
     "tsup": "^6.7.0",
     "typescript": "^5.0.4"
   },
+  "resolutions": {
+    "recast": "latest"
+  },
   "engines": {
     "node": "^14.17.0 || >= 16.0.0"
   },
