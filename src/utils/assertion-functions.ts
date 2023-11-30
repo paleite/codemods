@@ -1,5 +1,5 @@
 function assertNoUndefinedInArray<T>(
-  values: (T | undefined)[]
+  values: (T | undefined)[],
 ): asserts values is T[] {
   const containsUndefinedValues = values.some((value) => value === undefined);
 

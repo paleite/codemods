@@ -3,7 +3,7 @@ import { applyTransform } from "jscodeshift/dist/testUtils";
 
 type TransformerFactory = (
   module: Transform,
-  options?: Options
+  options?: Options,
 ) => (source: string) => { input: string; output: string };
 
 const createTransform: TransformerFactory =
@@ -15,7 +15,7 @@ const createTransform: TransformerFactory =
       module,
       options,
       { source },
-      { parser: "ts" }
+      { parser: "ts" },
     );
 
     return { input: source, output };

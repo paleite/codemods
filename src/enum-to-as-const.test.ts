@@ -17,7 +17,7 @@ describe("enum-to-as-const", () => {
 
   it("supports string literal identifiers", () => {
     const { output } = transform(
-      'enum Foo { "Foo-Bar" = "foo-bar", Baz = "baz" };'
+      'enum Foo { "Foo-Bar" = "foo-bar", Baz = "baz" };',
     );
 
     expect(output).toMatchInlineSnapshot(`
@@ -32,7 +32,7 @@ describe("enum-to-as-const", () => {
     const { output } = transform('enum Foo { MissingLiteral, Baz = "baz" }');
 
     expect(output).toMatchInlineSnapshot(
-      '"enum Foo { MissingLiteral, Baz = "baz" }"'
+      '"enum Foo { MissingLiteral, Baz = "baz" }"',
     );
   });
 });

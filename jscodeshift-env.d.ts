@@ -6,7 +6,7 @@ declare module "jscodeshift/dist/testUtils" {
     module: Transform,
     options: Options,
     input: FileInfo,
-    testOptions = {}
+    testOptions = {},
   ): string;
 
   // defineInlineTest
@@ -15,7 +15,7 @@ declare module "jscodeshift/dist/testUtils" {
     options: Options,
     input: string,
     expectedOutput: string,
-    testName: string
+    testName: string,
   ): void;
 
   // defineSnapshotTest
@@ -28,7 +28,7 @@ declare module "jscodeshift/dist/testUtils" {
     transformName: string,
     options: Options | null,
     testFilePrefix?: string,
-    testOptions: Options
+    testOptions: Options,
   ): void;
 
   // runInlineTest
@@ -37,7 +37,7 @@ declare module "jscodeshift/dist/testUtils" {
     options: Options,
     input: FileInfo,
     expectedOutput: string,
-    testOptions: Options
+    testOptions: Options,
   ): void;
 
   // runSnapshotTest
