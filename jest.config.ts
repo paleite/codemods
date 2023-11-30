@@ -6,4 +6,5 @@ export = {
   coverageProvider: "v8",
   coverageReporters: ["text", "json-summary"],
   ...base,
+  coveragePathIgnorePatterns: ["<rootDir>/lib/test-utils.ts"],
 };
