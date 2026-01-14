@@ -55,4 +55,102 @@ describe("form-subscribe-children", () => {
             );"
     `);
   });
+
+  it("keeps elements without a children prop unchanged", () => {
+    const { output } = transform(`
+      const Example = () => (
+        <form.Subscribe selector={(state) => state} />
+      );
+    `);
+
+    expect(output).toMatchInlineSnapshot(`
+      "const Example = () => (
+              <form.Subscribe selector={(state) => state} />
+            );"
+    `);
+  });
+
+  it("keeps boolean children props unchanged", () => {
+    const { output } = transform(`
+      const Example = () => (
+        <form.Subscribe children />
+      );
+    `);
+
+    expect(output).toMatchInlineSnapshot(`
+      "const Example = () => (
+              <form.Subscribe children />
+            );"
+    `);
+  });
+
+  it("moves string literal children to JSX text", () => {
+    const { output } = transform(`
+      const Example = () => (
+        <form.Subscribe children="Hello" />
+      );
+    `);
+
+    expect(output).toMatchInlineSnapshot(`
+      "const Example = () => (
+              <form.Subscribe>Hello</form.Subscribe>
+            );"
+    `);
+  });
+
+  it("moves JSX element children to real children", () => {
+    const { output } = transform(`
+      const Example = () => (
+        <form.Subscribe children={<span>Hi</span>} />
+      );
+    `);
+
+    expect(output).toMatchInlineSnapshot(`
+      "const Example = () => (
+              <form.Subscribe>{<span>Hi</span>}</form.Subscribe>
+            );"
+    `);
+  });
+
+  it("handles JSX element attribute values without braces", () => {
+    const { output } = transform(`
+      const Example = () => (
+        <form.Subscribe children=<span>Hi</span> />
+      );
+    `);
+
+    expect(output).toMatchInlineSnapshot(`
+      "const Example = () => (
+              <form.Subscribe>{<span>Hi</span>}</form.Subscribe>
+            );"
+    `);
+  });
+
+  it("moves JSX fragment children to real children", () => {
+    const { output } = transform(`
+      const Example = () => (
+        <form.Subscribe children={<></>} />
+      );
+    `);
+
+    expect(output).toMatchInlineSnapshot(`
+      "const Example = () => (
+              <form.Subscribe>{<></>}</form.Subscribe>
+            );"
+    `);
+  });
+
+  it("treats whitespace-only children as non-meaningful", () => {
+    const { output } = transform(`
+      const Example = () => (
+        <form.Subscribe children={(value) => <div>{value}</div>}> </form.Subscribe>
+      );
+    `);
+
+    expect(output).toMatchInlineSnapshot(`
+      "const Example = () => (
+              <form.Subscribe>{(value) => <div>{value}</div>}</form.Subscribe>
+            );"
+    `);
+  });
 });

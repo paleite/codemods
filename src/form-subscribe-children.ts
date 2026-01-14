@@ -39,37 +39,16 @@ const transform: Transform = (fileInfo, api) => {
   const buildChildrenFromAttribute = (
     attribute: JSXAttribute,
   ): JSXChildLike[] => {
-    if (attribute.value == null) {
-      return [];
+    const value = attribute.value!;
+
+    if (value.type === "StringLiteral") {
+      return [j.jsxText(value.value)];
     }
 
-    if (attribute.value.type === "JSXExpressionContainer") {
-      if (attribute.value.expression.type === "JSXEmptyExpression") {
-        return [];
-      }
+    const expression =
+      value.type === "JSXExpressionContainer" ? value.expression : value;
 
-      return [j.jsxExpressionContainer(attribute.value.expression)];
-    }
-
-    if (attribute.value.type === "StringLiteral") {
-      return [j.jsxText(attribute.value.value)];
-    }
-
-    if (
-      attribute.value.type === "Literal" &&
-      typeof attribute.value.value === "string"
-    ) {
-      return [j.jsxText(attribute.value.value)];
-    }
-
-    if (
-      attribute.value.type === "JSXElement" ||
-      attribute.value.type === "JSXFragment"
-    ) {
-      return [attribute.value];
-    }
-
-    return [j.jsxExpressionContainer(attribute.value)];
+    return [j.jsxExpressionContainer(expression)];
   };
 
   const hasMeaningfulChildren = (children: JSXChildLike[] = []) =>
@@ -86,7 +65,9 @@ const transform: Transform = (fileInfo, api) => {
       .filter((path) => isFormSubscribeName(path.node.openingElement.name))
       .forEach((path) => {
         const openingElement = path.node.openingElement;
-        const attributes = openingElement.attributes ?? [];
+        const attributes = openingElement.attributes as NonNullable<
+          typeof openingElement.attributes
+        >;
         const childrenIndex = findChildrenAttributeIndex(attributes);
 
         if (childrenIndex === -1) {
