@@ -19,10 +19,8 @@ const transform: Transform = (fileInfo, api) => {
   const j = api.jscodeshift;
   const root = j(fileInfo.source);
 
-  const isFormMemberName = (name: JSXElement["openingElement"]["name"]) =>
+  const isTargetMemberName = (name: JSXElement["openingElement"]["name"]) =>
     name.type === "JSXMemberExpression" &&
-    name.object.type === "JSXIdentifier" &&
-    name.object.name === "form" &&
     name.property.type === "JSXIdentifier" &&
     (name.property.name === "Subscribe" || name.property.name === "Field");
 
@@ -62,7 +60,7 @@ const transform: Transform = (fileInfo, api) => {
 
   const updateElements = (collection: Collection<JSXElement>) =>
     collection
-      .filter((path) => isFormMemberName(path.node.openingElement.name))
+      .filter((path) => isTargetMemberName(path.node.openingElement.name))
       .forEach((path) => {
         const openingElement = path.node.openingElement;
         const attributes = openingElement.attributes as NonNullable<

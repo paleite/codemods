@@ -38,6 +38,20 @@ describe("form-subscribe-children", () => {
     `);
   });
 
+  it("moves children prop for any .Subscribe member", () => {
+    const { output } = transform(`
+      const Example = () => (
+        <other.Subscribe children={(value) => <div>{value}</div>} />
+      );
+    `);
+
+    expect(output).toMatchInlineSnapshot(`
+      "const Example = () => (
+              <other.Subscribe>{(value) => <div>{value}</div>}</other.Subscribe>
+            );"
+    `);
+  });
+
   it("moves children prop to JSX children for non-self-closing elements", () => {
     const { output } = transform(`
       const Example = () => (
