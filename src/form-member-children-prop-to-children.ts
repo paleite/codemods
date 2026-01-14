@@ -19,12 +19,12 @@ const transform: Transform = (fileInfo, api) => {
   const j = api.jscodeshift;
   const root = j(fileInfo.source);
 
-  const isFormSubscribeName = (name: JSXElement["openingElement"]["name"]) =>
+  const isFormMemberName = (name: JSXElement["openingElement"]["name"]) =>
     name.type === "JSXMemberExpression" &&
     name.object.type === "JSXIdentifier" &&
     name.object.name === "form" &&
     name.property.type === "JSXIdentifier" &&
-    name.property.name === "Subscribe";
+    (name.property.name === "Subscribe" || name.property.name === "Field");
 
   const findChildrenAttributeIndex = (
     attributes: Array<JSXAttribute | JSXSpreadAttribute> = [],
@@ -62,7 +62,7 @@ const transform: Transform = (fileInfo, api) => {
 
   const updateElements = (collection: Collection<JSXElement>) =>
     collection
-      .filter((path) => isFormSubscribeName(path.node.openingElement.name))
+      .filter((path) => isFormMemberName(path.node.openingElement.name))
       .forEach((path) => {
         const openingElement = path.node.openingElement;
         const attributes = openingElement.attributes as NonNullable<

@@ -1,5 +1,5 @@
 import { createTransform } from "../lib/test-utils";
-import { default as formSubscribeChildren } from "./form-subscribe-children";
+import { default as formSubscribeChildren } from "./form-member-children-prop-to-children";
 
 const transform = createTransform(formSubscribeChildren, {}, "tsx");
 
@@ -17,6 +17,23 @@ describe("form-subscribe-children", () => {
     expect(output).toMatchInlineSnapshot(`
       "const Example = () => (
               <form.Subscribe selector={(state) => state}>{(value) => <div>{value}</div>}</form.Subscribe>
+            );"
+    `);
+  });
+
+  it("moves children prop for form.Field elements", () => {
+    const { output } = transform(`
+      const Example = () => (
+        <form.Field
+          children={(value) => <div>{value}</div>}
+          name="email"
+        />
+      );
+    `);
+
+    expect(output).toMatchInlineSnapshot(`
+      "const Example = () => (
+              <form.Field name="email">{(value) => <div>{value}</div>}</form.Field>
             );"
     `);
   });
