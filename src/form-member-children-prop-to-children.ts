@@ -25,7 +25,7 @@ const transform: Transform = (fileInfo, api) => {
     (name.property.name === "Subscribe" || name.property.name === "Field");
 
   const findChildrenAttributeIndex = (
-    attributes: Array<JSXAttribute | JSXSpreadAttribute> = [],
+    attributes: (JSXAttribute | JSXSpreadAttribute)[] = [],
   ) =>
     attributes.findIndex(
       (attribute) =>
@@ -63,9 +63,7 @@ const transform: Transform = (fileInfo, api) => {
       .filter((path) => isTargetMemberName(path.node.openingElement.name))
       .forEach((path) => {
         const openingElement = path.node.openingElement;
-        const attributes = openingElement.attributes as NonNullable<
-          typeof openingElement.attributes
-        >;
+        const attributes = openingElement.attributes!;
         const childrenIndex = findChildrenAttributeIndex(attributes);
 
         if (childrenIndex === -1) {
@@ -96,7 +94,7 @@ const transform: Transform = (fileInfo, api) => {
         }
       });
 
-  updateElements(root.find(j["JSXElement"]));
+  updateElements(root.find(j.JSXElement));
 
   return root.toSource();
 };

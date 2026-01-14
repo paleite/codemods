@@ -1,5 +1,5 @@
 import { createTransform } from "../lib/test-utils";
-import { default as formSubscribeChildren } from "./form-member-children-prop-to-children";
+import formSubscribeChildren from "./form-member-children-prop-to-children";
 
 const transform = createTransform(formSubscribeChildren, {}, "tsx");
 

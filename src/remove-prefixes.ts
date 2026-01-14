@@ -33,7 +33,7 @@ const transform: Transform = (fileInfo, api) => {
   };
 
   // Collect all the types and interfaces to be renamed
-  const typesToRename: Map<string, string> = new Map();
+  const typesToRename = new Map<string, string>();
 
   root.find(j.TSTypeAliasDeclaration).forEach((path) => {
     if (typeof path.node.id.name !== "string") {

@@ -1,5 +1,5 @@
 import { createTransform } from "../lib/test-utils";
-import { default as enumToAsConst } from "./enum-to-as-const";
+import enumToAsConst from "./enum-to-as-const";
 
 const transform = createTransform(enumToAsConst);
 

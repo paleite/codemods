@@ -1,5 +1,5 @@
 import { createTransform } from "../lib/test-utils";
-import { default as removePrefixes } from "./remove-prefixes";
+import removePrefixes from "./remove-prefixes";
 
 const transform = createTransform(removePrefixes);
 
