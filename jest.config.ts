@@ -4,7 +4,11 @@ export = {
   automock: false,
   clearMocks: true,
   coverageProvider: "v8",
-  coverageReporters: ["text", "json-summary"],
+  coverageReporters: [
+    "text",
+    "json-summary",
+    // "html"
+  ],
   ...base,
   coveragePathIgnorePatterns: ["<rootDir>/lib/test-utils.ts"],
 };

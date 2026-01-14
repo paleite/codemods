@@ -1,7 +1,24 @@
 import { createTransform } from "../lib/test-utils";
 import nativeToShadcn from "./native-to-shadcn";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const jscodeshift = require("jscodeshift");
+
 const transform = createTransform(nativeToShadcn, {}, "tsx");
+const runWithPath = (source: string, path = "src/app.tsx") => {
+  const api = {
+    jscodeshift,
+    j: jscodeshift,
+    stats: () => undefined,
+    report: () => undefined,
+  };
+
+  return nativeToShadcn(
+    { source, path } as { source: string; path: string },
+    api as typeof api,
+    {},
+  ) as string;
+};
 
 describe("native-to-shadcn", () => {
   it("replaces simple tags and adds imports", () => {
@@ -176,5 +193,161 @@ describe("native-to-shadcn", () => {
 
             const Demo = () => <ShadcnButton>Save</ShadcnButton>;"
     `);
+  });
+
+  it("skips transforms for ui component files", () => {
+    const source = `<button>Keep</button>`;
+    const output = runWithPath(source, "src/components/ui/button.tsx");
+
+    expect(output).toBe(source);
+  });
+
+  it("reuses existing imports when present", () => {
+    const output = runWithPath(`
+      import { Button as LocalButton } from "@/components/ui/button";
+
+      const Demo = () => <button>Save</button>;
+    `);
+
+    expect(output).toContain(
+      'import { Button as LocalButton } from "@/components/ui/button";',
+    );
+    expect(output).toContain("<LocalButton>Save</LocalButton>");
+    expect(output.split("@/components/ui/button").length - 1).toBe(1);
+  });
+
+  it("aliases when Button and ShadcnButton already exist", () => {
+    const output = runWithPath(`
+      const Button = () => null;
+      const ShadcnButton = () => null;
+
+      const Demo = () => <button>Save</button>;
+    `);
+
+    expect(output).toContain(
+      'import { Button as ShadcnButton1 } from "@/components/ui/button";',
+    );
+    expect(output).toContain("<ShadcnButton1>Save</ShadcnButton1>");
+  });
+
+  it("keeps non-string input types on Input", () => {
+    const output = runWithPath(`
+      const Demo = () => <input type={inputType} />;
+    `);
+
+    expect(output).toContain("<Input type={inputType} />");
+  });
+
+  it("skips select with complex children or size/multiple", () => {
+    const output = runWithPath(`
+      const Demo = () => (
+        <>
+          <select size={2}>
+            <option value="a">A</option>
+          </select>
+          <select multiple>
+            <option value="b">B</option>
+          </select>
+          <select>
+            <option value="c">C</option>
+            {extra}
+          </select>
+        </>
+      );
+    `);
+
+    expect(output).toContain("<select size={2}>");
+    expect(output).toContain("<select multiple>");
+    expect(output).toContain("{extra}");
+  });
+
+  it("preserves table imports when adding more table parts", () => {
+    const output = runWithPath(`
+      import { Table } from "@/components/ui/table";
+
+      const Demo = () => (
+        <table>
+          <tbody>
+            <tr>
+              <td>Row</td>
+            </tr>
+          </tbody>
+        </table>
+      );
+    `);
+
+    expect(output).toContain("import { Table");
+    expect(output).toContain("TableBody");
+    expect(output).toContain("TableRow");
+    expect(output).toContain("TableCell");
+    expect(output.split("@/components/ui/table").length - 1).toBe(1);
+  });
+
+  it("ignores member expression elements", () => {
+    const output = runWithPath(`
+      const Demo = () => (
+        <Foo.Bar>
+          <button>Save</button>
+        </Foo.Bar>
+      );
+    `);
+
+    expect(output).toContain("<Foo.Bar>");
+  });
+
+  it("handles options without plain text", () => {
+    const output = runWithPath(`
+      const Demo = () => (
+        <select>
+          <option><span>Nested</span></option>
+        </select>
+      );
+    `);
+
+    expect(output).toContain("<SelectItem>");
+    expect(output).not.toContain("value=");
+  });
+
+  it("keeps spread props on Select", () => {
+    const output = runWithPath(`
+      const Demo = () => (
+        <select {...props}>
+          <option value="a">A</option>
+        </select>
+      );
+    `);
+
+    expect(output).toContain("{...props}");
+  });
+
+  it("handles select options with placeholder, disabled, and selected", () => {
+    const output = runWithPath(`
+      const Demo = () => (
+        <select defaultValue="a" onChange={handleChange}>
+          <option value="">{"Pick one"}</option>
+          <option value="a" disabled selected>
+            Option A
+          </option>
+        </select>
+      );
+    `);
+
+    expect(output).toContain('placeholder="Pick one"');
+    expect(output).toContain('<SelectItem value="a" disabled>');
+    expect(output).not.toContain("selected");
+    expect(output).toContain("onValueChange={handleChange}");
+  });
+
+  it("adds a single radio TODO for adjacent radios", () => {
+    const output = runWithPath(`
+      const Demo = () => (
+        <>
+          <input type="radio" name="group" value="a" />
+          <input type="radio" name="group" value="b" />
+        </>
+      );
+    `);
+
+    expect(output.match(/wrap radio siblings/g)?.length ?? 0).toBe(1);
   });
 });

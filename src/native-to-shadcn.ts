@@ -79,7 +79,10 @@ const transform: Transform = (fileInfo, api) => {
   const root = j(fileInfo.source);
 
   const filePath = typeof fileInfo.path === "string" ? fileInfo.path : "";
-  if (filePath.includes("/src/components/ui/")) {
+  if (
+    filePath.includes("/src/components/ui/") ||
+    filePath.startsWith("src/components/ui/")
+  ) {
     return fileInfo.source;
   }
 
@@ -234,16 +237,36 @@ const transform: Transform = (fileInfo, api) => {
       return;
     }
 
-    const previous = siblings[index - 1];
-    if (
-      previous != null &&
-      previous.type === "JSXExpressionContainer" &&
-      previous.expression.type === "JSXEmptyExpression" &&
-      previous.expression.comments?.some(
-        (comment: { value: string }) => comment.value === RADIO_TODO,
-      )
-    ) {
-      return;
+    let previousIndex = index - 1;
+    while (previousIndex >= 0) {
+      const sibling = siblings[previousIndex];
+      if (sibling?.type === "JSXText" && sibling.value.trim().length === 0) {
+        previousIndex -= 1;
+        continue;
+      }
+
+      if (
+        sibling?.type === "JSXExpressionContainer" &&
+        sibling.expression.type === "JSXEmptyExpression" &&
+        sibling.expression.comments?.some(
+          (comment: { value: string }) => comment.value === RADIO_TODO,
+        )
+      ) {
+        return;
+      }
+
+      if (sibling?.type === "JSXElement") {
+        const siblingName = sibling.openingElement.name;
+        if (
+          siblingName.type === "JSXIdentifier" &&
+          siblingName.name === "RadioGroupItem"
+        ) {
+          previousIndex -= 1;
+          continue;
+        }
+      }
+
+      break;
     }
 
     siblings.splice(index, 0, createComment(RADIO_TODO), j.jsxText("\n"));
