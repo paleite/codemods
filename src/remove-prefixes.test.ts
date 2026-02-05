@@ -1,5 +1,5 @@
 import { createTransform } from "../lib/test-utils";
-import removePrefixes from "./remove-prefixes";
+import removePrefixes, { __test__ } from "./remove-prefixes";
 
 const transform = createTransform(removePrefixes);
 
@@ -77,5 +77,51 @@ export { IRequestError as TRequestErrorConstructor }`);
           import { UseQueryOptions3 } from "../types";
           import { UseQueryOptions as UseQueryOptions4 } from "../types";"
     `);
+  });
+
+  it("keeps unprefixed names unchanged", () => {
+    const { output } = transform(`
+      type Foo = string;
+      interface Bar { value: Foo; }
+      class Baz implements Bar {}
+
+      export { Foo };
+      export { Foo as BazAlias };
+
+      import { Foo as FooAlias, Bar } from "./types";
+    `);
+
+    expect(output).toContain("type Foo = string;");
+    expect(output).toContain("interface Bar { value: Foo; }");
+    expect(output).toContain("class Baz implements Bar {}");
+    expect(output).toContain("export { Foo };");
+    expect(output).toContain("export { Foo as BazAlias };");
+    expect(output).toContain('import { Foo as FooAlias, Bar } from "./types";');
+  });
+
+  it("throws when type alias name is not a string", () => {
+    expect(() => __test__.getTypeAliasName(123)).toThrow(
+      "Expected type alias name to be a string",
+    );
+  });
+
+  it("does not remove prefixes when second character is not uppercase", () => {
+    const { output } = transform(`
+      type Tfoo = string;
+      interface Ibar { value: Tfoo; }
+    `);
+
+    expect(output).toContain("type Tfoo = string;");
+    expect(output).toContain("interface Ibar { value: Tfoo; }");
+  });
+
+  it("does not remove single-letter prefixes", () => {
+    const { output } = transform(`
+      type T = string;
+      interface I { value: T; }
+    `);
+
+    expect(output).toContain("type T = string;");
+    expect(output).toContain("interface I { value: T; }");
   });
 });

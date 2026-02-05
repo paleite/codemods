@@ -74,29 +74,14 @@ const inputTypeMap: Record<string, string> = {
 
 const RADIO_TODO = "TODO: wrap radio siblings in <RadioGroup>";
 
-const transform: Transform = (fileInfo, api) => {
-  const j = api.jscodeshift;
-  const root = j(fileInfo.source);
-
-  const filePath = typeof fileInfo.path === "string" ? fileInfo.path : "";
-  if (
-    filePath.includes("/src/components/ui/") ||
-    filePath.startsWith("src/components/ui/")
-  ) {
-    return fileInfo.source;
-  }
-
-  const usedNames = new Set<string>();
-  root.find(j.Identifier).forEach((path) => {
-    usedNames.add(path.node.name);
-  });
-  root.find(j.JSXIdentifier).forEach((path) => {
-    usedNames.add(path.node.name);
-  });
-
-  const plannedImports = new Map<string, ImportSpec>();
-
-  const ensureImport = (importedName: string): string => {
+const createEnsureImport =
+  (
+    j: any,
+    root: any,
+    usedNames: Set<string>,
+    plannedImports: Map<string, ImportSpec>,
+  ) =>
+  (importedName: string): string => {
     const modulePath = componentImports[importedName];
     if (modulePath == null) {
       return importedName;
@@ -104,12 +89,12 @@ const transform: Transform = (fileInfo, api) => {
 
     const existing = root
       .find(j.ImportDeclaration)
-      .filter((path) => path.node.source.value === modulePath);
+      .filter((path: any) => path.node.source.value === modulePath);
 
     if (existing.size() > 0) {
       const existingSpecifier = existing
         .find(j.ImportSpecifier)
-        .filter((path) => {
+        .filter((path: any) => {
           const imported = path.node.imported;
           return (
             imported != null &&
@@ -126,11 +111,7 @@ const transform: Transform = (fileInfo, api) => {
         }
 
         const imported = existingSpecifier.imported;
-        if (imported.type === "Identifier") {
-          return imported.name;
-        }
-
-        return importedName;
+        return imported.name;
       }
     }
 
@@ -158,6 +139,85 @@ const transform: Transform = (fileInfo, api) => {
     usedNames.add(localName);
     return localName;
   };
+
+const createInsertTodoBefore =
+  (j: any, createComment: (message: string) => JSXExpressionContainer) =>
+  (path: ASTPath<JSXElement>) => {
+    const parent = path.parent.node;
+    if (
+      parent == null ||
+      (parent.type !== "JSXElement" && parent.type !== "JSXFragment")
+    ) {
+      return;
+    }
+
+    const siblings = parent.children as JSXElement["children"];
+    if (siblings == null) {
+      return;
+    }
+    const index = siblings.indexOf(path.node);
+    if (index < 0) {
+      return;
+    }
+
+    let previousIndex = index - 1;
+    while (previousIndex >= 0) {
+      const sibling = siblings[previousIndex];
+      if (sibling?.type === "JSXText" && sibling.value.trim().length === 0) {
+        previousIndex -= 1;
+        continue;
+      }
+
+      if (
+        sibling?.type === "JSXExpressionContainer" &&
+        sibling.expression.type === "JSXEmptyExpression" &&
+        sibling.expression.comments?.some(
+          (comment: { value: string }) => comment.value === RADIO_TODO,
+        )
+      ) {
+        return;
+      }
+
+      if (sibling?.type === "JSXElement") {
+        const siblingName = sibling.openingElement.name;
+        if (
+          siblingName.type === "JSXIdentifier" &&
+          siblingName.name === "RadioGroupItem"
+        ) {
+          previousIndex -= 1;
+          continue;
+        }
+      }
+
+      break;
+    }
+
+    siblings.splice(index, 0, createComment(RADIO_TODO), j.jsxText("\n"));
+  };
+
+const transform: Transform = (fileInfo, api) => {
+  const j = api.jscodeshift;
+  const root = j(fileInfo.source);
+
+  const filePath = typeof fileInfo.path === "string" ? fileInfo.path : "";
+  if (
+    filePath.includes("/src/components/ui/") ||
+    filePath.startsWith("src/components/ui/")
+  ) {
+    return fileInfo.source;
+  }
+
+  const usedNames = new Set<string>();
+  root.find(j.Identifier).forEach((path) => {
+    usedNames.add(path.node.name);
+  });
+  root.find(j.JSXIdentifier).forEach((path) => {
+    usedNames.add(path.node.name);
+  });
+
+  const plannedImports = new Map<string, ImportSpec>();
+
+  const ensureImport = createEnsureImport(j, root, usedNames, plannedImports);
 
   const isOnlyWhitespaceText = (child: JSXChildLike) =>
     child.type === "JSXText" && child.value.trim().length === 0;
@@ -219,58 +279,7 @@ const transform: Transform = (fileInfo, api) => {
       }),
     );
 
-  const insertTodoBefore = (path: ASTPath<JSXElement>) => {
-    const parent = path.parent.node;
-    if (
-      parent == null ||
-      (parent.type !== "JSXElement" && parent.type !== "JSXFragment")
-    ) {
-      return;
-    }
-
-    const siblings = parent.children as JSXElement["children"];
-    if (siblings == null) {
-      return;
-    }
-    const index = siblings.indexOf(path.node);
-    if (index < 0) {
-      return;
-    }
-
-    let previousIndex = index - 1;
-    while (previousIndex >= 0) {
-      const sibling = siblings[previousIndex];
-      if (sibling?.type === "JSXText" && sibling.value.trim().length === 0) {
-        previousIndex -= 1;
-        continue;
-      }
-
-      if (
-        sibling?.type === "JSXExpressionContainer" &&
-        sibling.expression.type === "JSXEmptyExpression" &&
-        sibling.expression.comments?.some(
-          (comment: { value: string }) => comment.value === RADIO_TODO,
-        )
-      ) {
-        return;
-      }
-
-      if (sibling?.type === "JSXElement") {
-        const siblingName = sibling.openingElement.name;
-        if (
-          siblingName.type === "JSXIdentifier" &&
-          siblingName.name === "RadioGroupItem"
-        ) {
-          previousIndex -= 1;
-          continue;
-        }
-      }
-
-      break;
-    }
-
-    siblings.splice(index, 0, createComment(RADIO_TODO), j.jsxText("\n"));
-  };
+  const insertTodoBefore = createInsertTodoBefore(j, createComment);
 
   const renameElement = (element: JSXElement, newName: string): JSXElement => {
     const localName = ensureImport(newName);
@@ -292,7 +301,7 @@ const transform: Transform = (fileInfo, api) => {
       return true;
     }
 
-    const children = (element.children ?? []) as JSXChildLike[];
+    const children = element.children as JSXChildLike[];
 
     return children
       .filter((child) => !isOnlyWhitespaceText(child))
@@ -353,7 +362,7 @@ const transform: Transform = (fileInfo, api) => {
       triggerProps.push(attribute);
     }
 
-    const options = (element.children ?? []).filter(
+    const options = element.children!.filter(
       (child): child is JSXElement =>
         child.type === "JSXElement" &&
         child.openingElement.name.type === "JSXIdentifier" &&
@@ -364,7 +373,7 @@ const transform: Transform = (fileInfo, api) => {
     const items: JSXElement[] = [];
 
     options.forEach((option) => {
-      const optionAttributes = option.openingElement.attributes ?? [];
+      const optionAttributes = option.openingElement.attributes!;
       const valueAttribute = getAttributeByName(optionAttributes, "value");
       const disabledAttribute = getAttributeByName(
         optionAttributes,
@@ -482,7 +491,7 @@ const transform: Transform = (fileInfo, api) => {
     }
 
     const name = elementName.name;
-    const attributes = openingElement.attributes ?? [];
+    const attributes = openingElement.attributes!;
 
     if (name === "input") {
       const typeAttribute = getAttributeByName(attributes, "type");
@@ -562,8 +571,7 @@ const transform: Transform = (fileInfo, api) => {
         );
 
       if (existing) {
-        existing.specifiers = existing.specifiers ?? [];
-        existing.specifiers.push(...importSpecifiers);
+        existing.specifiers!.push(...importSpecifiers);
         return;
       }
 
@@ -595,3 +603,8 @@ const transform: Transform = (fileInfo, api) => {
 };
 
 export default transform;
+
+export const __test__ = {
+  createEnsureImport,
+  createInsertTodoBefore,
+};

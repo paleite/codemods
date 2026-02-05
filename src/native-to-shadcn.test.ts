@@ -1,5 +1,5 @@
 import { createTransform } from "../lib/test-utils";
-import nativeToShadcn from "./native-to-shadcn";
+import nativeToShadcn, { __test__ } from "./native-to-shadcn";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const jscodeshift = require("jscodeshift");
@@ -338,6 +338,20 @@ describe("native-to-shadcn", () => {
     expect(output).toContain("onValueChange={handleChange}");
   });
 
+  it("drops whitespace-only placeholders", () => {
+    const output = runWithPath(`
+      const Demo = () => (
+        <select>
+          <option value="">   </option>
+          <option value="a">Option A</option>
+        </select>
+      );
+    `);
+
+    expect(output).toContain("<SelectValue");
+    expect(output).not.toContain("placeholder=");
+  });
+
   it("adds a single radio TODO for adjacent radios", () => {
     const output = runWithPath(`
       const Demo = () => (
@@ -349,5 +363,99 @@ describe("native-to-shadcn", () => {
     `);
 
     expect(output.match(/wrap radio siblings/g)?.length ?? 0).toBe(1);
+  });
+
+  it("skips non-identifier select attributes", () => {
+    const output = runWithPath(`
+      const Demo = () => (
+        <select xml:lang="en">
+          <option value="a">A</option>
+        </select>
+      );
+    `);
+
+    expect(output).toContain("<Select");
+    expect(output).not.toContain("xml:lang");
+  });
+
+  it("covers ensureImport fallback branches", () => {
+    const j = jscodeshift.withParser("tsx");
+    const root = j(`import { Button } from "@/components/ui/button";`);
+    const usedNames = new Set<string>();
+    const plannedImports = new Map();
+
+    const ensureImport = __test__.createEnsureImport(
+      j,
+      root,
+      usedNames,
+      plannedImports,
+    );
+
+    expect(ensureImport("NotInMap")).toBe("NotInMap");
+
+    const specifier = root.find(j.ImportSpecifier).nodes()[0];
+    specifier.local = null as any;
+
+    expect(ensureImport("Button")).toBe("Button");
+  });
+
+  it("covers insertTodoBefore guard clauses", () => {
+    const j = jscodeshift.withParser("tsx");
+    const createComment = (message: string) =>
+      j.jsxExpressionContainer(
+        Object.assign(j.jsxEmptyExpression(), {
+          comments: [j.commentBlock(message)],
+        }),
+      );
+    const insertTodoBefore = __test__.createInsertTodoBefore(j, createComment);
+
+    insertTodoBefore({
+      node: j.jsxElement(
+        j.jsxOpeningElement(j.jsxIdentifier("RadioGroupItem"), [], true),
+        null,
+        [],
+      ),
+      parent: { node: { type: "ExpressionStatement" } },
+    } as any);
+
+    insertTodoBefore({
+      node: j.jsxElement(
+        j.jsxOpeningElement(j.jsxIdentifier("RadioGroupItem"), [], true),
+        null,
+        [],
+      ),
+      parent: { node: { type: "JSXFragment" } },
+    } as any);
+
+    const node = j.jsxElement(
+      j.jsxOpeningElement(j.jsxIdentifier("RadioGroupItem"), [], true),
+      null,
+      [],
+    );
+    insertTodoBefore({
+      node,
+      parent: {
+        node: {
+          type: "JSXElement",
+          children: [
+            j.jsxElement(
+              j.jsxOpeningElement(j.jsxIdentifier("Other"), [], true),
+              null,
+              [],
+            ),
+          ],
+        },
+      },
+    } as any);
+
+    insertTodoBefore({
+      node,
+      parent: {
+        node: {
+          type: "JSXElement",
+          children: [node],
+        },
+      },
+    } as any);
   });
 });

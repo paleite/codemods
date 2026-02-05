@@ -8,6 +8,13 @@ import type {
 import { isArrayDefined } from "../assertion-functions";
 import { createVariableDeclarationWithAsConst } from "../create";
 
+const getEnumName = (name: unknown): string => {
+  if (typeof name !== "string") {
+    throw TypeError("Expected enum name to be a string");
+  }
+  return name;
+};
+
 const createReplaceWithVariableDeclarationWithAsConst = (j: JSCodeshift) => {
   const getObjectProperty = ({ id, initializer }: TSEnumMember) =>
     j.Expression.check(initializer)
@@ -27,10 +34,7 @@ const createReplaceWithVariableDeclarationWithAsConst = (j: JSCodeshift) => {
     this: Collection<TSEnumDeclaration>,
   ): Collection<TSEnumDeclaration> {
     return this.forEach((path) => {
-      if (typeof path.node.id.name !== "string") {
-        throw TypeError("Expected enum name to be a string");
-      }
-      const enumName = path.node.id.name;
+      const enumName = getEnumName(path.node.id.name);
       const literalObjectProperties = getObjectProperties(path);
 
       if (literalObjectProperties === undefined) {
@@ -59,7 +63,7 @@ declare module "jscodeshift/src/Collection" {
   }
 }
 
-const registerMethod = (j: JSCodeshift) => {
+export const registerMethod = (j: JSCodeshift) => {
   j.registerMethods(
     {
       replaceWithVariableDeclarationWithAsConst:
@@ -69,4 +73,6 @@ const registerMethod = (j: JSCodeshift) => {
   );
 };
 
-export { registerMethod };
+export const __test__ = {
+  getEnumName,
+};

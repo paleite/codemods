@@ -1,19 +1,23 @@
-import type {
-  Identifier,
-  TSInterfaceDeclaration,
-  Transform,
-} from "jscodeshift";
+import type { Identifier, JSCodeshift, Transform } from "jscodeshift";
+
+const getTypeAliasName = (name: unknown): string => {
+  if (typeof name !== "string") {
+    throw TypeError("Expected type alias name to be a string");
+  }
+  return name;
+};
+
+const assertIdentifier: (
+  j: JSCodeshift,
+  id: unknown,
+) => asserts id is Identifier = (j, id) => {
+  j.Identifier.assert(id as any);
+};
 
 const transform: Transform = (fileInfo, api) => {
   const j = api.jscodeshift;
   const root = j(fileInfo.source);
   const prefixPatterns = ["T", "I"];
-
-  function assertIdentifier(
-    id?: TSInterfaceDeclaration["id"] | null,
-  ): asserts id is Identifier {
-    j.Identifier.assert(id ?? undefined);
-  }
 
   const removePrefix = (name: string) => {
     for (const prefix of prefixPatterns) {
@@ -36,22 +40,20 @@ const transform: Transform = (fileInfo, api) => {
   const typesToRename = new Map<string, string>();
 
   root.find(j.TSTypeAliasDeclaration).forEach((path) => {
-    if (typeof path.node.id.name !== "string") {
-      throw TypeError("Expected type alias name to be a string");
-    }
-    const newName = removePrefix(path.node.id.name);
-    if (newName === path.node.id.name) {
+    const aliasName = getTypeAliasName(path.node.id.name);
+    const newName = removePrefix(aliasName);
+    if (newName === aliasName) {
       return;
     }
 
-    typesToRename.set(path.node.id.name, newName);
+    typesToRename.set(aliasName, newName);
     path.node.id.name = newName;
   });
 
   root
     .find(j.TSInterfaceDeclaration, { id: { type: "Identifier" } })
     .forEach((path) => {
-      assertIdentifier(path.node.id);
+      assertIdentifier(j, path.node.id);
 
       const newName = removePrefix(path.node.id.name);
       if (newName === path.node.id.name) {
@@ -63,7 +65,7 @@ const transform: Transform = (fileInfo, api) => {
     });
 
   root.find(j.TSExpressionWithTypeArguments).forEach((path) => {
-    assertIdentifier(path.node.expression);
+    assertIdentifier(j, path.node.expression);
 
     const newName = removePrefix(path.node.expression.name);
     if (newName === path.node.expression.name) {
@@ -77,7 +79,7 @@ const transform: Transform = (fileInfo, api) => {
   root
     .find(j.ExportSpecifier, { local: { type: "Identifier" } })
     .forEach((path) => {
-      assertIdentifier(path.node.local);
+      assertIdentifier(j, path.node.local);
 
       const newName = removePrefix(path.node.local.name);
       if (newName === path.node.local.name) {
@@ -91,7 +93,7 @@ const transform: Transform = (fileInfo, api) => {
   root
     .find(j.ExportSpecifier, { exported: { type: "Identifier" } })
     .forEach((path) => {
-      assertIdentifier(path.node.exported);
+      assertIdentifier(j, path.node.exported);
 
       const newName = removePrefix(path.node.exported.name);
       if (newName === path.node.exported.name) {
@@ -105,7 +107,7 @@ const transform: Transform = (fileInfo, api) => {
   root
     .find(j.ImportSpecifier, { local: { type: "Identifier" } })
     .forEach((path) => {
-      assertIdentifier(path.node.local);
+      assertIdentifier(j, path.node.local);
 
       const newName = removePrefix(path.node.local.name);
       if (newName === path.node.local.name) {
@@ -119,7 +121,7 @@ const transform: Transform = (fileInfo, api) => {
   root
     .find(j.ImportSpecifier, { imported: { type: "Identifier" } })
     .forEach((path) => {
-      assertIdentifier(path.node.imported);
+      assertIdentifier(j, path.node.imported);
 
       const newName = removePrefix(path.node.imported.name);
       if (newName === path.node.imported.name) {
@@ -134,7 +136,7 @@ const transform: Transform = (fileInfo, api) => {
   root
     .find(j.TSTypeReference, { typeName: { type: "Identifier" } })
     .forEach((path) => {
-      assertIdentifier(path.node.typeName);
+      assertIdentifier(j, path.node.typeName);
 
       const newName = typesToRename.get(path.node.typeName.name);
       if (newName === undefined) {
@@ -150,3 +152,7 @@ const transform: Transform = (fileInfo, api) => {
 };
 
 export default transform;
+
+export const __test__ = {
+  getTypeAliasName,
+};
