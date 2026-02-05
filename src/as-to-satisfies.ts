@@ -72,3 +72,9 @@ const transform: Transform = (fileInfo, api) => {
 };
 
 export default transform;
+
+export const __test__ = {
+  unwrapExpression,
+  isDisallowedTypeAnnotation,
+  isDisallowedExpression,
+};

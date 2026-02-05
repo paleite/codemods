@@ -1,5 +1,5 @@
 import { createTransform } from "../lib/test-utils";
-import asToSatisfies from "./as-to-satisfies";
+import asToSatisfies, { __test__ } from "./as-to-satisfies";
 
 const transform = createTransform(asToSatisfies, {}, "tsx");
 
@@ -87,5 +87,26 @@ describe("as-to-satisfies", () => {
     expect(output).toMatchInlineSnapshot(
       `"const value = { a: 1 } as const satisfies { a: number };"`,
     );
+  });
+
+  it("covers helper branches", () => {
+    expect(__test__.unwrapExpression(null)).toBeNull();
+    expect(__test__.unwrapExpression({ type: "Literal" })).toEqual({
+      type: "Literal",
+    });
+    expect(
+      __test__.unwrapExpression({
+        type: "ParenthesizedExpression",
+        expression: { type: "TSParenthesizedExpression", expression: null },
+      }),
+    ).toBeNull();
+    expect(__test__.isDisallowedTypeAnnotation(null)).toBe(true);
+    expect(
+      __test__.isDisallowedTypeAnnotation({
+        type: "TSTypeReference",
+        typeName: { type: "Identifier", name: "const" },
+      }),
+    ).toBe(true);
+    expect(__test__.isDisallowedExpression(null)).toBe(true);
   });
 });
