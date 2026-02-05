@@ -53,6 +53,17 @@ git ls-files -z "*.ts" "*.tsx" | xargs -0 pnpm exec jscodeshift \
   --transform ./src/form-member-children-prop-to-children.ts
 ```
 
+### `as-to-satisfies`
+
+Replaces `as` assertions with `satisfies` (aggressive). Skips `as const`,
+`as any`, `as unknown`, `as never`, double assertions, and `new` expressions.
+
+```sh
+git ls-files -z "*.ts" "*.tsx" | xargs -0 pnpm exec jscodeshift \
+  --parser=tsx --extensions=tsx,ts \
+  --transform ./src/as-to-satisfies.ts
+```
+
 ### `native-to-shadcn`
 
 Replaces native HTML tags with shadcn/ui equivalents and adds the required
